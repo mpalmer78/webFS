@@ -1,0 +1,182 @@
+body {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+#status-message {
+    float: right;
+    color: orangered;
+    font-size: larger;
+    margin-top: -40px;
+}
+
+#notes {
+    display: none;
+    border: 2px dashed skyblue;
+    background-color: #F2F4F4;
+    overflow: hidden;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+/*fs-tree list styles */
+.fs-tree {
+    border: 1px solid gainsboro;
+    float: left;
+    width: auto;
+    margin-right: 20px;
+}
+
+    .fs-tree ul {
+        list-style: none;
+    }
+
+    .fs-tree li {
+        padding-left: 1.3em;
+    }
+
+.folder {
+    cursor: pointer;
+}
+
+    .folder span:hover {
+        background-color: DeepSkyBlue;
+    }
+
+    .folder.selected span {
+        background-color: lightblue;
+    }
+
+    .folder:before {
+        content: "\f07c";
+        font-family: FontAwesome;
+        display: inline-block;
+        margin-left: -1.3em;
+        width: 1.3em;
+        cursor: pointer;
+    }
+
+.file:before {
+    content: "\f016";
+    font-family: FontAwesome;
+    display: inline-block;
+    margin-left: -1.3em;
+    width: 1.3em;
+}
+
+/*fs-grid table styles*/
+.fs-grid {
+    overflow: hidden;
+}
+
+    .fs-grid table {
+        width: 100%;
+    }
+
+    .fs-grid th, td {
+        text-align: left;
+        padding: 5px;
+    }
+
+    .fs-grid table, th, td {
+        border-collapse: collapse;
+        /* border: aliceblue; */
+    }
+
+    .fs-grid tfoot {
+        background-color: gainsboro;
+    }
+
+    .fs-grid th {
+        background-color: gainsboro;
+    }
+
+    .fs-grid tr:hover {
+        background-color: DeepSkyBlue;
+        cursor: default;
+    }
+
+    .fs-grid tr.selected {
+        background-color: lightblue;
+    }
+
+
+/*icon stuff*/
+.row-icon-folder {
+    content: "\f07b";
+    font-family: FontAwesome;
+    width: 30px;
+    text-align: center;
+}
+
+.row-icon-file {
+    content: "\f016";
+    font-family: FontAwesome;
+    width: 30px;
+    text-align: center;
+}
+
+.cut-file {
+    color: darkseagreen;
+    font-family: FontAwesome;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.copy-file {
+    color: lightskyblue;
+    font-family: FontAwesome;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.delete-file {
+    color: red;
+    font-family: FontAwesome;
+    cursor: pointer;
+}
+
+.paste-file {
+    font-family: FontAwesome;
+    cursor: pointer;
+    margin-left: 10px;
+    visibility: hidden;
+}
+
+/*Right-click context menu*/
+.menu {
+    width: 100px;
+    background: white;
+    position: absolute;
+    z-index: 999999;
+    display: none;
+    box-shadow: 0 0 10px #713C3C;
+}
+
+    .menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .menu ul a {
+            text-decoration: none;
+        }
+
+        .menu ul li {
+            width: 88%;
+            padding: 6%;
+            border-width: 1px;
+            border-style: solid;
+            /*background-color: navajowhite;*/
+            color: black;
+            cursor: pointer;
+        }
+
+    .menu .disabled {
+        color: grey;
+        cursor: default;
+    }
+
+    .menu ul li:hover {
+        background-color: lightskyblue;
+    }
