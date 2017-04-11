@@ -7,16 +7,16 @@
     let fileSystem = new FileSystem();
     fileSystem.load().then(() => {
         bindViewEvents();
-    })
+    });
 
     function bindViewEvents() {
         window.onhashchange = () => deepLink();
 
         window.addEventListener("dragover", e => e.preventDefault(), false);
-        window.addEventListener("drop", (e) => e.preventDefault(), false);
+        window.addEventListener("drop", e => e.preventDefault(), false);
 
-        document.addEventListener("drop", (e) => handleFileDrop(e), false);
-        document.addEventListener("dragenter", (e) => highlightDropArea(true), false);
+        document.addEventListener("drop", e => handleFileDrop(e), false);
+        document.addEventListener("dragenter", e => highlightDropArea(true), false);
 
         let subs = folderTreeElement.getElementsByClassName("folder");
         for (let sub of subs) {
@@ -34,7 +34,8 @@
             let menu = document.getElementsByClassName("menu");
             if (menu.style.display === 'none') {
                 menu.style.display = 'block';
-            } else {
+            }
+            else {
                 menu.style.display = 'none';
             }
         });
@@ -49,10 +50,9 @@
     }
 
     function onOpenClicked(e) {
-        let element = $(e.currentTarget);
-        let id = element.data('id');
-        let type = element.data('type');
-        if (type === 'folder') {
+        let gridRow = e.currentTarget;
+        let id = gridRow.dataset.id;
+        if (gridRow.dataset.type === 'folder') {
             openFolder(id);
         }
         else {
@@ -80,9 +80,6 @@
             grid.style.borderColor = "";
             grid.style.borderWidth = "";
         }
-        //html5 drag drop is quirky
-        //this just makes sure we don't highlight forever
-        setTimeout(() => highlightDropArea(false), 5000);
     }
 
     function handleFileDrop(e) {
@@ -140,44 +137,49 @@
             generateGridRowHtml_File(g, file);
         }
         if (g.length === 0) return;
-        let tbody = $(this.fileGridId + " tbody");
-        let fileHtml = g.join("\n");
-        tbody.append(fileHtml);
+        //let tbody = $(this.fileGridId + " tbody");
+        let tbody = document.querySelector(this.fileGridId + " tbody");
+        let filesHtml = g.join("\n");
+        tbody.insertAdjacentHTML('beforeend', filesHtml);
     }
 
     function showStatus(msg) {
-        let status = $("#status-message");
-        status.text(msg);
-        setTimeout(() => status.text(""), 3000);
+        let status = document.getElementById("status-message");
+        status.innerText = msg;
+        //show msg for 5 secs
+        setTimeout(() => status.innerText = "", 5000);
     }
 
     function bindTreeEvents() {
-        $(this.folderTreeId + " li").click((e) => onTreeFolderSelected(e));
+        document.querySelector(this.folderTreeId + " li").addEventListener('click', e => onTreeFolderSelected(e)));
+        //$(this.folderTreeId + " li").click((e) => onTreeFolderSelected(e));
     }
 
     function bindGridRowEvents() {
-        let gridRows = $(this.fileGridId + " tr");
+        let gridRows = document.querySelector(this.fileGridId + " tr");
+        //let gridRows = $(this.fileGridId + " tr");
 
         gridRows
-            .on("click", (e) => onGridRowSelected(e))
-            .on("dblclick", (e) => onGridRowDoubleClick(e))
-            .on("contextmenu", (e) => onGridRowRightClick(e));
+            .addEventListener("click", e => onGridRowSelected(e))
+            .addEventListener("dblclick", e => onGridRowDoubleClick(e))
+            .addEventListener("contextmenu", e => onGridRowRightClick(e));
     }
 
     function onGridRowRightClick(e) {
         e.preventDefault();
 
-        let menu = $(".menu");
+        //let menu = $(".menu");
+        let menu = document.getElementsByClassName("menu")[0];
 
         //hide menu if already shown
-        menu.hide();
+        menu.style.display = "none";
 
         //open menu div near mouse clicked area
         let pageX = e.pageX;
         let pageY = e.pageY;
-        menu.css({ top: pageY, left: pageX });
+        menu.style({ top: pageY, left: pageX });
 
-        let menuWidth = menu.width();
+        let menuWidth = menu.clientWidth;
         let menuHeight = menu.height();
         let screenWidth = $(window).width();
         let screenHeight = $(window).height();
