@@ -1,0 +1,66 @@
+body {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+/*folder-tree list styles */
+.folder-tree {
+    border: 1px solid gainsboro;
+    float: left;
+    width: auto;
+    margin-right: 20px;
+    list-style: none;
+    padding-right: 10px;
+}
+
+    .folder-tree li {
+        padding-left: 1.3em;
+        user-select: none;
+    }
+
+    .folder-tree span.folder-text::before {
+        content: "\f07c"; /*folder-open*/
+        font-family: FontAwesome;
+        display: inline-block;
+/*         margin-left: -1.3em; */
+        width: 1.3em;
+        cursor: pointer;
+    }
+
+    .folder-tree .folder::before {        
+        font-family: FontAwesome;
+        font-size: x-small;
+        display: inline-block;
+        margin-left: -1.3em;
+        width: 1.3em;
+        cursor: pointer;
+    }
+
+    .folder-tree .folder.expanded::before {
+        content: "\f078"; /*chevron-right*/
+        color: black;
+    }
+
+    .folder-tree .folder.collapsed::before {
+        content: "\f054"; /*chevron-down*/
+        color: gray;
+    }
+
+    .folder-tree .folder.expanded ul li {
+        display: block;
+    }
+
+    .folder-tree .folder.collapsed ul li {
+        display: none;
+    }
+
+.folder {
+    cursor: pointer;
+}
+
+    .folder span:hover {
+        background-color: DeepSkyBlue;
+    }
+
+    .folder.selected span {
+        background-color: lightblue;
+    }
+

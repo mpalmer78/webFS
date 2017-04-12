@@ -8,34 +8,11 @@
     <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-    <div ondragover="return false" class="wrapper">
-        <header>
-            <h1>webFS</h1>
-        </header>
-        <div id="status-message"></div>
-        <div id="wrapper">
-            <ul id="folder-tree-main" class="folder-tree">
-                <li class="folder root expanded">
-                    <span class="folder-text">Root</span>
-                    <ul>
-                        <li class="folder expanded">
-                            <span class="folder-text">Folder 1</span>
-                            <ul>
-                                <li class="folder expanded"><span class="folder-text">Sub 1</span></li>
-                                <li class="folder expanded"><span class="folder-text">Sub 2</span></li>
-                                <li class="folder expanded"><span class="folder-text">Sub 3</span></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <script src="js/AppController.js"></script>
-    <script>
-        new AppController("folder-tree-main");
-    </script>
-    <div class="menu">
+    <h1>webFS</h1>
+    <div id="status-message"></div>
+    <div id="folder-tree-main" class="folder-tree"></div>
+    <div id="grid-main" class="fs-grid"></div>
+    <div id="context-menu" class="menu">
         <ul>
             <!--<li class="menu-open">Open</li>-->
             <li class="menu-copy">Copy</li>
@@ -44,9 +21,11 @@
             <li class="menu-delete">Delete</li>
         </ul>
     </div>
+    <script src="js/FileSystem.js"></script>
+    <script src="js/Folder.js"></script>
     <script src="js/AppController.js"></script>
     <script>
-        new AppController("folder-tree-main");
+        new AppController("folder-tree-main", "grid-main", "context-menu");
     </script>
 </body>
 </html>

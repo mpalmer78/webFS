@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using webFS.Server.Models;
+using Newtonsoft.Json.Serialization;
 
 namespace webFS.Server
 {
@@ -15,14 +16,13 @@ namespace webFS.Server
     {
         public IConfigurationRoot Configuration { get; }
         private Settings _settings;
-        private FileSystem _fileSystem;
 
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)                
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
 
@@ -34,7 +34,8 @@ namespace webFS.Server
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddMvc();
+            services.AddMvc()
+                    .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
             services.Configure<Settings>(Configuration);
             services.AddSingleton(_settings);
             services.AddScoped(typeof(FileSystem), typeof(FileSystem));

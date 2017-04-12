@@ -1,11 +1,22 @@
 "use strict";
 
-class FileSystem {
-    Load() {
-        return fetch('/fs/root').then((r) => r.json());
+function FileSystem() {
+
+    if (!FileSystem.prototype.Load) {
+        FileSystem.prototype.Load = Load;
+        FileSystem.prototype.Upload = Upload;
+        FileSystem.prototype.Download = Download;
+        FileSystem.prototype.Delete = Delete;
+        FileSystem.prototype.Copy = Copy;
+        FileSystem.prototype.Move = Move;
+        return;
     }
 
-    Upload(files, destination, callback) {
+    function Load() {
+        return fetch('/fs/root').then(r => r.json());
+    }
+
+    function Upload(files, destination, callback) {
         if (!files || files.length === 0) return;
 
         let data = new FormData();
@@ -14,22 +25,22 @@ class FileSystem {
             data.append("file", file, file.name);
         }
 
-        return fetch('/fs/upload', { method: 'POST', body: data }).then((r) => r.json());
+        return fetch('/fs/upload', { method: 'POST', body: data }).then(r => r.json());
     }
 
-    Download(entry) {
+    function Download(entry) {
         fetch('/fs/download/' + entry + "/").then(r => r.blob());
     }
 
-    Delete(entry) {
-        return fetch('/fs/delete/' + entry + "/", { method: 'DELETE' }).then((r) => r.json());
+    function Delete(entry) {
+        return fetch('/fs/delete/' + entry + "/", { method: 'DELETE' }).then(r => r.json());
     }
 
-    Copy(from, to) {
-        return fetch(`/fs/copy/${from}/to/${to}/`, { method: 'POST' }).then((r) => r.json());
+    function Copy(from, to) {
+        return fetch(`/fs/copy/${from}/to/${to}/`, { method: 'POST' }).then(r => r.json());
     }
-    
-    Move(from, to) {
-        return fetch(`/fs/move/${from}/to/${to}/`, { method: 'POST' }).then((r) => r.json());
+
+    function Move(from, to) {
+        return fetch(`/fs/move/${from}/to/${to}/`, { method: 'POST' }).then(r => r.json());
     }
 }

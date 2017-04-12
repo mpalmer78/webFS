@@ -18,21 +18,59 @@ body {
     padding: 10px;
 }
 
-/*fs-tree list styles */
-.fs-tree {
+/*folder-tree list styles */
+.folder-tree {
     border: 1px solid gainsboro;
     float: left;
-    width: auto;
+    width: 350px;
+    overflow: auto;
     margin-right: 20px;
+    padding-right: 10px;
 }
-
-    .fs-tree ul {
+    .folder-tree ul {
         list-style: none;
     }
-
-    .fs-tree li {
+    
+    .folder-tree li {
         padding-left: 1.3em;
+        user-select: none;
     }
+
+    .folder-tree span.folder-text::before {
+        content: "\f07c"; /*folder-open*/
+        font-family: FontAwesome;
+        display: inline-block;
+        width: 1.3em;
+        cursor: pointer;
+    }
+
+    .folder-tree .folder::before {        
+        font-family: FontAwesome;
+        font-size: x-small;
+        display: inline-block;
+        margin-left: -1.3em;
+        width: 1.3em;
+        cursor: pointer;
+    }
+
+    .folder-tree .folder.expanded::before {
+        content: "\f078"; /*chevron-right*/
+        color: black;
+    }
+
+    .folder-tree .folder.collapsed::before {
+        content: "\f054"; /*chevron-down*/
+        color: gray;
+    }
+
+    .folder-tree .folder.expanded ~ ul {
+        display: block;
+    }
+
+    .folder-tree .folder.collapsed ~ ul {
+        display: none;
+    }
+
 
 .folder {
     cursor: pointer;
@@ -50,7 +88,7 @@ body {
         content: "\f07c";
         font-family: FontAwesome;
         display: inline-block;
-        margin-left: -1.3em;
+        /* margin-left: -1.3em; */
         width: 1.3em;
         cursor: pointer;
     }
@@ -90,12 +128,12 @@ body {
         background-color: gainsboro;
     }
 
-    .fs-grid tr:hover {
+    .fs-grid tbody tr:hover {
         background-color: DeepSkyBlue;
         cursor: default;
     }
 
-    .fs-grid tr.selected {
+    .fs-grid tbody tr.selected {
         background-color: lightblue;
     }
 

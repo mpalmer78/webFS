@@ -1,13 +1,21 @@
-﻿var AppController = function (folderTreeId) {
+"option strict";
 
-    let folderTreeElement = document.getElementById(folderTreeId);
+var AppController = function (folderTreeId, fileGridId, contextMenuId) {
 
-    if (!folderTreeElement) throw "Element Id '" + folderTreeId + "' not found.";
+    //currently selected folder
+    let _currentFolder;
 
-    let fileSystem = new FileSystem();
-    fileSystem.load().then(() => {
-        bindViewEvents();
-    });
+    //currently selected grid row
+    let _selectedGridRow;
+
+    //root FileSystem instance
+    let _fsRoot;
+
+    let _folderTreeElement = document.getElementById(folderTreeId);
+
+    if (!_folderTreeElement) throw "Element Id '" + folderTreeId + "' not found.";
+
+    loadFileSystem(new FileSystem()).then(() => bindViewEvents());
 
     function bindViewEvents() {
         window.onhashchange = () => deepLink();
@@ -18,27 +26,29 @@
         document.addEventListener("drop", e => handleFileDrop(e), false);
         document.addEventListener("dragenter", e => highlightDropArea(true), false);
 
-        let subs = folderTreeElement.getElementsByClassName("folder");
+        let subs = _folderTreeElement.getElementsByClassName("folder");
         for (let sub of subs) {
             sub.addEventListener("dblclick", onTreeFolderDoubleClick);
         }
 
-        document.getElementsByClassName("menu-open").addEventListener("click", e => onOpenClicked(e));
-        document.getElementsByClassName("menu-copy").addEventListener("click", e => onCopyClicked(e));
-        document.getElementsByClassName("menu-cut").addEventListener("click", e => onCutClicked(e));
-        document.getElementsByClassName("menu-paste").addEventListener("click", e => onPasteClicked(e));
-        document.getElementsByClassName("menu-delete").addEventListener("click", e => onDeleteClicked(e));
+        //document.querySelector('#' + contextMenuId + ".menu-open").addEventListener("click", e => onOpenClicked(e));
+        document.querySelector('#' + contextMenuId + " .menu-copy").addEventListener("click", e => onCopyClicked(e));
+        document.querySelector('#' + contextMenuId + " .menu-cut").addEventListener("click", e => onCutClicked(e));
+        document.querySelector('#' + contextMenuId + " .menu-paste").addEventListener("click", e => onPasteClicked(e));
+        document.querySelector('#' + contextMenuId + " .menu-delete").addEventListener("click", e => onDeleteClicked(e));
 
         //hide any open right-click menus
-        document.getElementsByName("html").addEventListener("click", () => {
-            let menu = document.getElementsByClassName("menu");
-            if (menu.style.display === 'none') {
-                menu.style.display = 'block';
-            }
-            else {
-                menu.style.display = 'none';
-            }
-        });
+//         document.getElementsByTagName("html")[0].addEventListener("click", () => {
+//             let menus = document.getElementsByClassName("menu");
+//             for(let menu of menus) {
+//                 if (menu.style.display === 'none') {
+//                     menu.style.display = 'block';
+//                 }
+//                 else {
+//                     menu.style.display = 'none';
+//                 }
+//             }
+//         });
 
         bindTreeEvents();
         bindGridRowEvents();
@@ -46,7 +56,18 @@
 
     function onTreeFolderDoubleClick(e) {
         e.stopPropagation();
-        new Folder(e.currentTarget).ToggleExpand();
+        ToggleFolderExpansion(e.currentTarget);
+    }
+
+    function ToggleFolderExpansion(folderElement) {
+        if (folderElement.classList.contains("expanded")) {
+            folderElement.classList.remove("expanded");
+            folderElement.classList.add("collapsed");
+        }
+        else {
+            folderElement.classList.remove("collapsed");
+            folderElement.classList.add("expanded");
+        }
     }
 
     function onOpenClicked(e) {
@@ -90,7 +111,7 @@
         let files = e.dataTransfer.files;
         if (files.length === 0) return;
 
-        this.fileSystem.Upload(files, this.currentFolder).then((fileResults) => {
+        fileSystem.Upload(files, _currentFolder).then((fileResults) => {
             appendFilesToGrid(fileResults);
         });
     }
@@ -107,14 +128,14 @@
 
     function displaySelectedTreeFolder(folderId) {
         if (!folderId) return;
-        let currentFolder = document.querySelector(this.folderTreeId + " .folder.selected");
-        if (currentFolder) {
-            currentFolder.classList.remove("selected");
+        let current = document.querySelector(folderTreeId + " .folder.selected");
+        if (current) {
+            current.classList.remove("selected");
         }
 
-        let selectedFolder = document.querySelector("li[data-id='" + folderId + "'");
-        if (selectedFolder) {
-            selectedFolder.classList.add("selected");
+        let selected = document.querySelector("li[data-id='" + folderId + "'");
+        if (selected) {
+            selected.classList.add("selected");
         }
     }
 
@@ -132,13 +153,13 @@
 
     function appendFilesToGrid(files) {
         if (!files || files.length === 0) return;
-        var g = [];
+        let g = [];
         for (let file of files) {
             generateGridRowHtml_File(g, file);
         }
         if (g.length === 0) return;
         //let tbody = $(this.fileGridId + " tbody");
-        let tbody = document.querySelector(this.fileGridId + " tbody");
+        let tbody = document.querySelector(fileGridId + " tbody");
         let filesHtml = g.join("\n");
         tbody.insertAdjacentHTML('beforeend', filesHtml);
     }
@@ -151,126 +172,136 @@
     }
 
     function bindTreeEvents() {
-        document.querySelector(this.folderTreeId + " li").addEventListener('click', e => onTreeFolderSelected(e)));
+        let treeFolders = document.querySelectorAll("#" + folderTreeId + " li");
+        for (let folder of treeFolders) {
+            folder.addEventListener('click', e => onTreeFolderSelected(e));
+        }
         //$(this.folderTreeId + " li").click((e) => onTreeFolderSelected(e));
     }
 
     function bindGridRowEvents() {
-        let gridRows = document.querySelector(this.fileGridId + " tr");
+        let gridRows = document.querySelectorAll("#" + fileGridId + " tr");
         //let gridRows = $(this.fileGridId + " tr");
-
-        gridRows
-            .addEventListener("click", e => onGridRowSelected(e))
-            .addEventListener("dblclick", e => onGridRowDoubleClick(e))
-            .addEventListener("contextmenu", e => onGridRowRightClick(e));
+        for (let row of gridRows) {
+            row.addEventListener("click", e => onGridRowSelected(e));
+            row.addEventListener("dblclick", e => onGridRowDoubleClick(e));
+            row.addEventListener("contextmenu", e => onGridRowRightClick(e));
+        }        
     }
 
     function onGridRowRightClick(e) {
         e.preventDefault();
 
         //let menu = $(".menu");
-        let menu = document.getElementsByClassName("menu")[0];
+        let menu = document.getElementById(contextMenuId);
 
         //hide menu if already shown
         menu.style.display = "none";
 
-        //open menu div near mouse clicked area
+        //position menu div near mouse clicked area
         let pageX = e.pageX;
         let pageY = e.pageY;
-        menu.style({ top: pageY, left: pageX });
+        menu.style.top = pageY;
+        menu.style.left = pageX;
 
-        let menuWidth = menu.clientWidth;
-        let menuHeight = menu.height();
-        let screenWidth = $(window).width();
-        let screenHeight = $(window).height();
-        let scrollTop = $(window).scrollTop();
+        let menuWidth = 100;
+        let menuHeight = 200;
+        let screenWidth = window.innerWidth;
+        let screenHeight = window.innerHeight;
+        let scrollTop = 0;//window.scrollTop;
 
         //if the menu is close to right edge of the window
         if (pageX + menuWidth > screenWidth) {
-            menu.css({ left: pageX - menuWidth });
+            menu.style.left = pageX - menuWidth + "px";
         }
 
         //if the menu is close to bottom edge of the window
         if (pageY + menuHeight > screenHeight + scrollTop) {
-            menu.css({ top: pageY - menuHeight });
+            menu.style.top = pageY - menuHeight + "px";
         }
 
         onGridRowSelected(e);
-
-        menu.show();
+        
+        menu.style.display = "block";
     }
 
     function onCopyClicked(e) {
-        if (!this.selectedGridRow) return;
-        var id = $(this.selectedGridRow).data("id");
-        this.clipboard = { "id": id, "isCopy": true, "isCut": false };
-        $(".menu-paste").removeClass("disabled");
+        if (!_selectedGridRow) return;
+        let id = _selectedGridRow.dataset.id;
+        clipboard = { "id": id, "isCopy": true, "isCut": false };
+        document.queryselector(".menu-paste").classList.removeClass("disabled");
         showStatus("Copied to clipboard!");
     }
 
     function onPasteClicked(e) {
-        if (!this.clipboard) return;
-        if (!this.selectedGridRow) return;
-        var from = this.clipboard.id;
-        var to = $(this.selectedGridRow).data("id");
-        if (this.clipboard.isCopy) {
+        if (!clipboard) return;
+        if (!_selectedGridRow) return;
+        let from = clipboard.id;
+        let to = _selectedGridRow.dataset.id;
+        let menuPaste = document.querySelector(".menu-paste");
+        if (clipboard.isCopy) {
             //copy / paste
-            this.fileSystem.Copy(from, to).then((results) => {
+            fileSystem.Copy(from, to).then(results => {
                 updateFolder(results);
                 console.log("pasted copy");
-                $(".menu-paste").addClass("disabled");
-                this.clipboard = null;
+                menuPaste.classList.add("disabled");
+                clipboard = null;
             });
         }
         else {
             //cut / paste
-            this.fileSystem.Move(from, to).then((results) => {
+            fileSystem.Move(from, to).then(results => {
                 updateFolder(results.From);
                 updateFolder(results.To);
-                $(".menu-paste").addClass("disabled");
-                this.clipboard = null;
+                menuPaste.classList.add("disabled");
+                clipboard = null;
             });
         }
     }
 
     function updateFolder(folder) {
-        var folderToUpdate = getFolderById(folder.Id);
+        let folderToUpdate = getFolderById(folder.Id);
         folderToUpdate.Folders = folder.Folders;
         folderToUpdate.Files = folder.Files;
 
-        if (this.currentFolder === folderToUpdate.Id)
+        if (_currentFolder === folderToUpdate.Id)
             displayFolder(folderToUpdate.Id);
     }
 
     function onCutClicked(e) {
-        if (!this.selectedGridRow) return;
-        var id = $(this.selectedGridRow).data("id");
-        this.clipboard = { "id": id, "isCopy": false, "isCut": true };
-        $(".menu-paste").removeClass("disabled");
+        if (!_selectedGridRow) return;
+        let id = _selectedGridRow.dataset.id;
+        clipboard = { "id": id, "isCopy": false, "isCut": true };
+        document.querySelector(".menu-paste").classList.remove("disabled");
         showStatus("Copied to clipboard!");
     }
 
     function onDeleteClicked(e) {
-        if (!this.selectedGridRow) return;
+        if (!_selectedGridRow) return;
 
-        var id = $(this.selectedGridRow).data("id");
+        let id = _selectedGridRow.dataset.id;
 
         if (!confirm("OK to delete this file?")) return;
 
-        this.fileSystem.Delete(id).then(() => $(this.selectedGridRow).remove());
+        fileSystem.Delete(id).then(() => {
+            _selectedGridRow.parent.remove(_selectedGridRow);
+            _selectedGridRow = null;
+        });
     }
 
     function onGridRowSelected(e) {
-        $(this.fileGridId + " .selected").removeClass("selected");
-        $(e.currentTarget).addClass("selected");
-        this.selectedGridRow = e.currentTarget;
+        var selectedRow = document.querySelector("#" + fileGridId + " .selected");
+        if (selectedRow) {
+            selectedRow.classList.remove("selected");    
+        }        
+        _selectedGridRow = e.currentTarget;
+        _selectedGridRow.classList.add("selected");        
     }
 
     function onGridRowDoubleClick(e) {
-        let element = $(e.currentTarget);
-        let id = element.data('id');
-        let type = element.data('type');
-        if (type === 'folder') {
+        let row = e.currentTarget;
+        let id = row.dataset.id;        
+        if (row.dataset.type === 'folder') {
             openFolder(id);
         }
         else {
@@ -279,16 +310,15 @@
     }
 
     function onTreeFolderSelected(e) {
-        $(this.folderTreeId + " .folder.selected").removeClass("selected");
-        let folderElement = $(e.currentTarget);
-        folderElement.addClass("selected");
-        let folderId = folderElement.data('id');
-        openFolder(folderId);
+        document.querySelector("#" + folderTreeId + " .folder.selected").classList.remove("selected");
+        let folderElement = e.currentTarget;
+        folderElement.classList.add("selected");
+        openFolder(folderElement.dataset.id);
     }
 
-    function openFile(fileId) {        
-        var path = `/fs/download/${encodeURI(fileId)}/`;
-        this.window.location = path;
+    function openFile(fileId) {
+        let path = `/fs/download/${encodeURI(fileId)}/`;
+        window.location = path;
     }
 
     function openFolder(folderId) {
@@ -296,7 +326,7 @@
 
         if (!theFolder) return;
 
-        this.currentFolder = folderId;
+        _currentFolder = folderId;
 
         //load the grid
         let grid = [];
@@ -308,10 +338,10 @@
         }
 
         let gridHtml = grid.join("\n");
-        let tbody = $(this.fileGridId + " tbody");
+        let tbody = document.querySelector("#" + fileGridId + " tbody");
 
-        tbody.empty();
-        tbody.append(gridHtml);
+        tbody.innerHTML = "";
+        tbody.innerHTML = gridHtml;
 
         bindGridRowEvents();
 
@@ -319,8 +349,8 @@
         let folderCount = theFolder.Folders.length;
         let fileCount = theFolder.Files.length;
         let itemCount = folderCount + fileCount;
-        $(this.fileGridId + " #item-count").text(`${itemCount} items - (${folderCount} folders | ${fileCount} files )`);
-        $(this.fileGridId + " #files-size").text(`${theFolder.FileSizeSummary}`);
+        document.querySelector("#" + fileGridId + " #item-count").innerText = `${itemCount} items - (${folderCount} folders | ${fileCount} files )`;
+        document.querySelector("#" + fileGridId + " #files-size").innerText = `${theFolder.FileSizeSummary}`;
 
         //update hash path
         let path = encodeURI(folderId);
@@ -331,10 +361,10 @@
     function getFolderById(folderId) {
         let theFolder;
         if (folderId === "|") {
-            theFolder = this.fsRoot; //at root
+            theFolder = _fsRoot; //at root
         }
         else {
-            for (let folder of this.fsRoot.Folders) {
+            for (let folder of _fsRoot.Folders) {
                 if (folder.Id === folderId) {
                     theFolder = folder;
                     break;
@@ -356,64 +386,66 @@
         }
     }
 
-    function loadFileSystem(doneCallback) {
-        this.fileSystem.Load().then((fs) => {
-            this.fsRoot = fs;
-            $(this.folderTreeId).empty();
+    function loadFileSystem(fileSystem) {
+        return new Promise((resolve,reject) => {
+            fileSystem.Load().then((fs) => {
+                _fsRoot = fs;
+                _folderTreeElement.innerHTML = "";
 
-            //grid table header
-            let g = [];
-            g.push("<table>");
-            g.push(" <thead>");
-            g.push("  <tr>");
-            g.push("   <th class='row-icon-folder'></th>");
-            g.push("   <th>Name</th>");
-            g.push("   <th>Date modified</th>");
-            g.push("   <th>Type</th>");
-            g.push("   <th>Size</th>");
-            g.push(" </tr>");
-            g.push(" </thead>");
-            g.push("<tbody>");
+                //grid table header
+                let g = [];
+                g.push("<table>");
+                g.push(" <thead>");
+                g.push("  <tr>");
+                g.push("   <th class='row-icon-folder'></th>");
+                g.push("   <th>Name</th>");
+                g.push("   <th>Date modified</th>");
+                g.push("   <th>Type</th>");
+                g.push("   <th>Size</th>");
+                g.push(" </tr>");
+                g.push(" </thead>");
+                g.push("<tbody>");
 
-            //tree header
-            let t = [];
-            t.push("<ul>");
-            t.push(` <li class='folder root selected' data-id='|'><span>${fs.Root}</span></li>`);
-            t.push("  <ul>");
+                //tree header
+                let t = [];
+                t.push("<ul>");
+                t.push(` <li class='folder root expanded selected' data-id='|'><span class='folder-text'>${fs.Root}</span></li>`);
+                t.push("  <ul>");
 
-            //tree and grid folders
-            for (let folder of this.fsRoot.Folders) {
+                //tree and grid folders
+                for (let folder of _fsRoot.Folders) {
 
-                //tree folders
-                t.push(`<li class='folder' data-id='${folder.Id}'><span>${folder.Name}</span></li>`);
-                generateTreeHtml_Folder(t, folder);
+                    //tree folders
+                    t.push(`<li class='folder collapsed' data-id='${folder.Id}'><span class='folder-text'>${folder.Name}</span></li>`);
+                    generateTreeHtml_Folder(t, folder);
 
-                //grid folders
-                generateGridRowHtml_Folder(g, folder);
-            }
-            t.push(" </ul>");
-            t.push("</ul>");
-            $(this.folderTreeId).html(t.join("\n"));
+                    //grid folders
+                    generateGridRowHtml_Folder(g, folder);
+                }
+                t.push(" </ul>");
+                t.push("</ul>");
+                let treeHtml = t.join("\n");
+                _folderTreeElement.innerHTML = treeHtml;
 
-            //grid files
-            for (let file of this.fsRoot.Files) {
-                generateGridRowHtml_File(g, file);
-            }
-            g.push(" </tbody>");
+                //grid files
+                for (let file of _fsRoot.Files) {
+                    generateGridRowHtml_File(g, file);
+                }
+                g.push(" </tbody>");
+                g.push(" <tfoot>");
+                g.push("  <tr>");
+                g.push("   <td></td>");
+                g.push("   <td colspan='3'><span id='item-count'></span></td>");
+                g.push("   <td colspan='2'><span id='files-size'></span></td>");
+                g.push("  </tr>");
+                g.push(" </tfoot>");
+                g.push("</table>");
 
-            g.push(" <tfoot>");
-            g.push("  <tr>");
-            g.push("   <td></td>");
-            g.push("   <td colspan='3'><span id='item-count'></span></td>");
-            g.push("   <td colspan='2'><span id='files-size'></span></td>");
-            g.push("  </tr>");
-            g.push(" </tfoot>");
-
-            g.push("</table>");
-            let gridHtml = g.join("\n");
-            $(this.fileGridId).html(gridHtml);
-            this.currentFolder = "|"; //root
-            doneCallback();
+                let gridHtml = g.join("\n");
+                document.getElementById(fileGridId).innerHTML = gridHtml;
+                _currentFolder = "|"; //root
+                resolve();
+            });
         });
     }
 
@@ -442,7 +474,7 @@
 
         tree.push("<ul>");
         for (let folder of subFolder.Folders) {
-            tree.push(`<li class='folder' data-id='${folder.Id}'><span>${folder.Name}</span></li>`);
+            tree.push(`<li class='folder collapsed' data-id='${folder.Id}'><span class="folder-text">${folder.Name}</span></li>`);
             generateTreeHtml_Folder(tree, folder);
         }
         tree.push("</ul>");
@@ -475,66 +507,4 @@
         }
 
     }
-}
-
-
-function Folder(sourceElement) {
-    if (Folder.prototype.ToggleExpand) return;
-
-    Folder.prototype.ToggleExpand = function () {
-        if (sourceElement.classList.contains("expanded")) {
-            sourceElement.classList.remove("expanded");
-            sourceElement.classList.add("collapsed");
-        }
-        else {
-            sourceElement.classList.remove("collapsed");
-            sourceElement.classList.add("expanded");
-        }
-    }
-}
-
-function FileSystem() {
-
-    if (!FileSystem.prototype.Load)
-    {
-        FileSystem.prototype.Load = Load;
-        FileSystem.prototype.Upload = Upload;
-        FileSystem.prototype.Download = Download;
-        FileSystem.prototype.Delete = Delete;
-        FileSystem.prototype.Copy = Copy;
-        FileSystem.prototype.Move = Move;
-        return;
-    }
-
-    function Load() {
-        return fetch('/fs/root').then((r) => r.json());
-    }
-
-    function Upload(files, destination, callback) {
-        if (!files || files.length === 0) return;
-
-        let data = new FormData();
-        data.append("destination", destination);
-        for (let file of files) {
-            data.append("file", file, file.name);
-        }
-
-        return fetch('/fs/upload', { method: 'POST', body: data }).then((r) => r.json());
-    }
-
-    function Download(entry) {
-        fetch('/fs/download/' + entry + "/").then(r => r.blob());
-    }
-
-    function Delete(entry) {
-        return fetch('/fs/delete/' + entry + "/", { method: 'DELETE' }).then((r) => r.json());
-    }
-
-    function Copy(from, to) {
-        return fetch(`/fs/copy/${from}/to/${to}/`, { method: 'POST' }).then((r) => r.json());
-    }
-
-    function Move(from, to) {
-        return fetch(`/fs/move/${from}/to/${to}/`, { method: 'POST' }).then((r) => r.json());
-    }
-}
+};
